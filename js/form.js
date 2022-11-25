@@ -2,6 +2,7 @@ import {renderMarkers, resetMap} from './map.js';
 import {sendData} from './api.js';
 import {showSuccess, showError} from './dialog.js';
 import {getLocalDataMax} from './data.js';
+import {avatarPreview, photoPreviewContainer} from './photo.js';
 
 export const BASIC_POSITION = {
   lat: 35.68172,
@@ -17,6 +18,8 @@ const HOUSE_TYPE = {
 const MIN_TITLE_LENGTH = 30;
 const MAX_TITLE_LENGTH = 100;
 const SLIDER_PRICE_START = 1000;
+const SLIDER_PRICE_MAX = 100000;
+const SLIDER_STEP = 100;
 
 const form = document.querySelector('.ad-form');
 export const filtersForm = document.querySelector('.map__filters');
@@ -43,10 +46,10 @@ const pristine = new Pristine(form, {
 noUiSlider.create(slider, {
   range: {
     min: 0,
-    max: 100000,
+    max: SLIDER_PRICE_MAX,
   },
   start: SLIDER_PRICE_START,
-  step: 100,
+  step: SLIDER_STEP,
   connect: 'lower',
   format: {
     to(value) {
@@ -59,14 +62,14 @@ noUiSlider.create(slider, {
 });
 
 export const setAddressValue = (lat, lng) => {
-  fieldAddress.value = `${lat} ${lng}`;
+  fieldAddress.value = `${lat}, ${lng}`;
 };
 
 const validateTitle = (value) => value.length >= MIN_TITLE_LENGTH && value.length <= MAX_TITLE_LENGTH;
 
-const validatePrice = (input) => Number(input) >= HOUSE_TYPE[fieldType.value] && Number(input) <= 100000;
+const validatePrice = (input) => Number(input) >= HOUSE_TYPE[fieldType.value] && Number(input) <= SLIDER_PRICE_MAX;
 
-const getPriceError = () => `Цена от ${HOUSE_TYPE[fieldType.value]} до 100000`;
+const getPriceError = () => `Цена от ${HOUSE_TYPE[fieldType.value]} до ${SLIDER_PRICE_MAX}`;
 
 const validateRoomNumber = () => {
   if (fieldRoomNumber.value === '100' && fieldGuestNumber.value === '0') {
@@ -80,10 +83,15 @@ const resetForm = () => {
   resetMap();
   form.reset();
   filtersForm.reset();
+  renderMarkers(getLocalDataMax());
   setAddressValue(BASIC_POSITION.lat, BASIC_POSITION.lng);
   slider.noUiSlider.updateOptions({
     start: SLIDER_PRICE_START,
   });
+  pristine.reset();
+  fieldPrice.placeholder = HOUSE_TYPE[fieldType.value];
+  avatarPreview.src = 'img/muffin-grey.svg';
+  photoPreviewContainer.innerHTML = '';
 };
 
 pristine.addValidator(
@@ -121,7 +129,6 @@ slider.noUiSlider.on('slide', () => {
 resetButton.addEventListener('click', (evt) => {
   evt.preventDefault();
   resetForm();
-  renderMarkers(getLocalDataMax());
 });
 
 fieldGuestNumber.addEventListener('change', () => pristine.validate(fieldRoomNumber));

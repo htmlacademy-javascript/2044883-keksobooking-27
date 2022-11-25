@@ -1,11 +1,12 @@
-import {enableForm} from './toggle-status.js';
+import {enableAdForm, enableForm} from './toggle-status.js';
 import {getData} from './api.js';
 import {createAdElement} from './element.js';
-import {BASIC_POSITION, setAddressValue, filtersForm, filtersFormElements} from './form.js';
+import {BASIC_POSITION, setAddressValue} from './form.js';
 import {getLocalDataMax, saveLocalData} from './data.js';
 import {showAlert} from './dialog.js';
 
-const mapFilters = document.querySelector('.map__filters');
+const MAP_ZOOM = 12;
+
 const mainPinIcon = L.icon({
   iconUrl: './img/main-pin.svg',
   iconSize: [52, 52],
@@ -16,14 +17,6 @@ const pinIcon = L.icon({
   iconSize: [40, 40],
   iconAnchor: [20, 40],
 });
-
-export const disableMapFilters = () => {
-  mapFilters.disabled = true;
-  filtersForm.classList.toggle('ad-form--disabled');
-  for (const filtersFormElement of filtersFormElements) {
-    filtersFormElement.disabled = true;
-  }
-};
 
 const createMarker = (point) => L.marker(
   {
@@ -50,16 +43,16 @@ export const renderMarkers = (points) => {
 map
   .on('load', () => {
     getData((points) => {
+      enableForm();
       saveLocalData(points);
       renderMarkers(getLocalDataMax());
     }, () => {
       showAlert('Не удалось получить данные с сервера.');
-      disableMapFilters();
+      enableAdForm();
     });
-    enableForm();
     setAddressValue(BASIC_POSITION.lat, BASIC_POSITION.lng);
   })
-  .setView(BASIC_POSITION, 12);
+  .setView(BASIC_POSITION, MAP_ZOOM);
 
 L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -84,5 +77,5 @@ mainMarker.addTo(map);
 
 export const resetMap = () => {
   mainMarker.setLatLng(BASIC_POSITION);
-  map.setView(BASIC_POSITION, 12);
+  map.setView(BASIC_POSITION, MAP_ZOOM);
 };
